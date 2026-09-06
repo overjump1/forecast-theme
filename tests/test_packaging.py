@@ -61,47 +61,61 @@ def test_core_modules_are_qt_free():
         assert not offenders, f"{module} imports Qt at module scope: {offenders}"
 
 
+# Run in a subprocess, not in-process. Purging PyQt6 from ``sys.modules`` to simulate its absence
+# crashes the interpreter with an access violation -- its C extension modules cannot be unloaded
+# and re-imported. A fresh interpreter has not imported Qt yet, so blocking it there is both safe
+# and a more faithful test of the case this guards: a machine where PyQt6 is genuinely not present.
+_HEADLESS_PROBE = """
+import sys
+
+
+class Blocker:
+    def find_module(self, name, path=None):
+        if name.split(".")[0] == "PyQt6":
+            return self
+
+    def load_module(self, name):
+        raise ImportError("PyQt6 blocked")
+
+
+sys.meta_path.insert(0, Blocker())
+
+import paperskin as ps
+
+for pal in (ps.LIGHT, ps.DARK):
+    ps.testing.assert_readable_tiers(pal)
+    ps.testing.assert_decorative_tiers(pal)
+    ps.testing.assert_tinted_fills(pal)
+    assert ps.base_qss(pal)
+    assert ps.tone_rules(pal)
+
+try:
+    ps.load_fonts()
+except ImportError:
+    pass                     # the Qt surface must fail cleanly, not silently degrade
+else:
+    raise SystemExit("load_fonts() worked with PyQt6 blocked")
+
+assert "PyQt6" not in sys.modules, "importing paperskin pulled in Qt"
+print("OK")
+"""
+
+
 def test_core_surface_works_without_pyqt6_installed():
     """The headless guarantee, proved rather than assumed.
 
     ``test_core_modules_are_qt_free`` only reads source text, and a machine that happens to have
-    PyQt6 installed would pass it while the guarantee quietly rotted -- so this actually blocks the
-    import and exercises the contrast suite and the stylesheet against it. That is the case a token
-    generator or a CI contrast job runs in.
+    PyQt6 installed would pass it while the guarantee quietly rotted. This blocks the import for
+    real and exercises the contrast suite and the stylesheet against it -- which is the case a
+    token generator or a CI contrast job actually runs in.
     """
-    import importlib
+    import subprocess
 
-    class Blocker:
-        def find_module(self, name, path=None):
-            if name.split(".")[0] == "PyQt6":
-                return self
-
-        def load_module(self, name):
-            raise ImportError("PyQt6 blocked for this test")
-
-    blocker = Blocker()
-    saved = {k: v for k, v in sys.modules.items() if k.split(".")[0] in ("PyQt6", "paperskin")}
-    for name in list(saved):
-        del sys.modules[name]
-    sys.meta_path.insert(0, blocker)
-    try:
-        ps = importlib.import_module("paperskin")
-        for pal in (ps.LIGHT, ps.DARK):
-            ps.testing.assert_readable_tiers(pal)
-            ps.testing.assert_tinted_fills(pal)
-            assert ps.base_qss(pal)
-        try:
-            ps.load_fonts()
-        except ImportError:
-            pass                    # the Qt surface must fail cleanly, not silently degrade
-        else:
-            raise AssertionError("load_fonts() worked with PyQt6 blocked")
-    finally:
-        sys.meta_path.remove(blocker)
-        for name in list(sys.modules):
-            if name.split(".")[0] in ("PyQt6", "paperskin"):
-                del sys.modules[name]
-        sys.modules.update(saved)
+    result = subprocess.run([sys.executable, "-c", _HEADLESS_PROBE],
+                            capture_output=True, text=True, timeout=120)
+    assert result.returncode == 0, (
+        f"headless probe failed:\n{result.stdout}\n{result.stderr}")
+    assert "OK" in result.stdout
 
 
 def test_pyinstaller_hook_is_discoverable():
