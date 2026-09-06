@@ -61,24 +61,18 @@ def test_core_modules_are_qt_free():
         assert not offenders, f"{module} imports Qt at module scope: {offenders}"
 
 
-# Run in a subprocess, not in-process. Purging PyQt6 from ``sys.modules`` to simulate its absence
-# crashes the interpreter with an access violation -- its C extension modules cannot be unloaded
-# and re-imported. A fresh interpreter has not imported Qt yet, so blocking it there is both safe
-# and a more faithful test of the case this guards: a machine where PyQt6 is genuinely not present.
+# Run in a subprocess, not in-process. Simulating Qt's absence by unloading it from an interpreter
+# that has already imported it crashes with an access violation -- its C extension modules cannot
+# be unloaded and re-imported. A fresh interpreter has not touched Qt yet, so blocking it there is
+# both safe and a more faithful test of what this guards: a machine where PyQt6 is not installed.
 _HEADLESS_PROBE = """
 import sys
 
-
-class Blocker:
-    def find_module(self, name, path=None):
-        if name.split(".")[0] == "PyQt6":
-            return self
-
-    def load_module(self, name):
-        raise ImportError("PyQt6 blocked")
-
-
-sys.meta_path.insert(0, Blocker())
+# A None in sys.modules makes `import PyQt6` raise ImportError -- documented behaviour, stable
+# across versions, and it needs no meta_path finder. The first attempt used a find_module()-style
+# finder, which Python 3.12 removed: the blocker went inert and the probe crashed instead of
+# failing. Submodules are covered too, since importing PyQt6.QtGui imports PyQt6 first.
+sys.modules["PyQt6"] = None
 
 import paperskin as ps
 
@@ -96,7 +90,7 @@ except ImportError:
 else:
     raise SystemExit("load_fonts() worked with PyQt6 blocked")
 
-assert "PyQt6" not in sys.modules, "importing paperskin pulled in Qt"
+assert sys.modules["PyQt6"] is None, "importing paperskin pulled in Qt"
 print("OK")
 """
 
