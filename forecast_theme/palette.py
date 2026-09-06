@@ -270,153 +270,143 @@ LIGHT = Palette(
     name=MODE_LIGHT,
     dark=False,
 
-    # The slide's warm sand, verbatim from its slide master.
-    void="#F6DCC0",
-    depth="#FFFBF5",
+    # A cool near-white, not a warm one. The ground is the single biggest decision in a palette:
+    # everything else is read against it, and a neutral-cool ground is what lets the accent stay
+    # a signal instead of competing with the paper.
+    void="#EEF2F8",
+    depth="#FFFFFF",
 
-    # Lighter than the ground, same hue family as the ground -- a card has to read as an elevated
-    # sand surface, not a different, greyer material sitting on top of it. Two earlier passes
-    # missed that from opposite sides: 252/241/228 composited to near-white (#FBEFE1) and read as a
-    # flat white panel; pulling it down toward 238/219/196 desaturated it enough to read as grey
-    # next to the apricot accent instead of just darker sand.
-    glass=Ink(250, 232, 205, 0.85),
-    glass_hi=Ink(253, 240, 220, 0.88),
-    glass_low=Ink(238, 213, 185, 0.90),
+    # Cards are white over the cool ground. High alphas because light Mica tints toward the
+    # wallpaper, and a dark desktop would otherwise drag the surface down with it.
+    glass=Ink(255, 255, 255, 0.86),
+    glass_hi=Ink(255, 255, 255, 0.94),
+    glass_low=Ink(224, 232, 243, 0.92),
 
-    # Ink, not light -- see the docstring. At 0.34 this composites to #CBB095 over the ground,
-    # which is the slide's #C5AA91 taupe rule to within three units.
-    edge=Ink(120, 92, 66, 0.18),
-    edge_faint=Ink(120, 92, 66, 0.09),
-    edge_hi=Ink(120, 92, 66, 0.34),
-    edge_top=Ink(120, 92, 66, 0.30),
+    # Hairlines are ink at low alpha, never a fixed grey: over a surface that shifts with the
+    # backdrop, a fixed grey goes muddy in one direction and invisible in the other.
+    edge=Ink(24, 45, 76, 0.16),
+    edge_faint=Ink(24, 45, 76, 0.08),
+    edge_hi=Ink(24, 45, 76, 0.30),
+    edge_top=Ink(24, 45, 76, 0.26),
 
-    accent="#E6A870",           # the slide's apricot, and a fill only
-    accent_hi="#D9975C",        # hover moves toward the viewer: deeper on a light ground
-    accent_dim="#F0C79C",
-    accent_ink="#894E15",       # 5.03 ground / 5.87 card / 4.74 recessed
-    accent_line="#A96626",      # 3.45 ground / 3.30 recessed -- clears 1.4.11
-    accent_fill=Ink(230, 168, 112, 0.18),   # accent_ink on it: 4.62 over the card
-    pill_ink="#3A2A1C",         # 6.68 on the accent; the slide's white would be 2.06
-    on_accent_disabled=Ink(58, 42, 28, 0.45),
-    rule="#E6A870",             # decorative, so full strength
+    accent="#0EA5E9",
+    accent_hi="#0284C7",
+    accent_dim="#BAE6FD",
+    accent_ink="#075985",
+    accent_line="#0369A1",
+    accent_fill=Ink(14, 165, 233, 0.14),
+    pill_ink="#032430",
+    on_accent_disabled=Ink(3, 36, 48, 0.45),
+    rule="#0EA5E9",
 
-    ok="#3F6B18",               # 4.78 / 5.66 / 4.57
-    warn="#795609",             # 5.06 / 5.90 / 4.76 -- see the collision note below
-    danger="#A83318",           # 5.05 / 5.98 / 4.83
-    danger_hi="#BC3C1E",
-    danger_ink="#FFF6EF",       # 6.24 on the danger fill; the one ink whose direction flips
-    ok_fill=Ink(63, 107, 24, 0.10),
-    warn_fill=Ink(121, 86, 9, 0.10),
-    danger_fill=Ink(168, 51, 24, 0.10),
+    ok="#166534",
+    warn="#854D0E",
+    danger="#BE123C",
+    danger_hi="#9F1239",
+    danger_ink="#FFF1F4",
+    ok_fill=Ink(22, 101, 52, 0.10),
+    warn_fill=Ink(133, 77, 14, 0.10),
+    danger_fill=Ink(190, 18, 60, 0.10),
 
-    text="#2E241C",             # 11.49 / 13.35 / 10.98
-    text_dim="#6B5545",         # 5.29 / 6.15 / 4.98
-    text_faint="#8A7462",       # 3.35 / 3.89 / 3.15
+    text="#0F1B2D",
+    text_dim="#47576D",
+    text_faint="#68788F",
 
-    ctrl_hover=Ink(246, 229, 208, 0.95),
-    ctrl_pressed=Ink(233, 213, 190, 0.95),
-    ctrl_disabled=Ink(238, 213, 185, 0.55),
-    well=Ink(120, 92, 66, 0.12),
-    overlay=Ink(120, 92, 66, 0.22),
-    overlay_hi=Ink(120, 92, 66, 0.38),
+    ctrl_hover=Ink(234, 240, 249, 0.95),
+    ctrl_pressed=Ink(213, 224, 239, 0.95),
+    ctrl_disabled=Ink(224, 232, 243, 0.55),
+    well=Ink(24, 45, 76, 0.12),
+    overlay=Ink(24, 45, 76, 0.22),
+    overlay_hi=Ink(24, 45, 76, 0.38),
 
-    track_on="#E6A870",
-    track_off="#C5AA91",        # the slide's taupe, verbatim
+    track_on="#0EA5E9",
+    track_off="#A9B8CC",
     knob_on="#FFFFFF",
-    knob_off="#404040",         # 4.71 against the taupe track
+    knob_off="#39485C",
 
-    tile_empty="#F0E2D0",
-    tile_pending="#B2A190",
-    tile_queued="#9E7418",
-    tile_running="#E08C3E",     # deepened: the accent itself is 1.56:1 on sand
-    tile_done="#6E9A32",
-    tile_carried="#B6C99A",
-    tile_failed="#B93E22",
-    tile_aborted="#8A7F92",     # the one off-hue: aborted is not a point on the terrain ramp
-    tile_grid_ink="#2A2018",    # minimum 2.86 across the eight fills
+    tile_empty="#E2EAF4",
+    tile_pending="#8F9FB5",
+    tile_queued="#1D6A9B",
+    tile_running="#0EA5E9",
+    tile_done="#2E9E5B",
+    tile_carried="#A4D6BA",
+    tile_failed="#DC2E4E",
+    tile_aborted="#8A84A6",
+    tile_grid_ink="#16202C",
 
-    extent_ink=Ink(74, 54, 38, 0.38),
-    plate=Ink(238, 216, 190, 0.86),
+    extent_ink=Ink(15, 27, 45, 0.38),
+    plate=Ink(224, 232, 243, 0.86),
 )
 
 DARK = Palette(
     name=MODE_DARK,
     dark=True,
 
-    # Warm black rather than the neutral or green-cast black a dark theme usually reaches for, so
-    # the apricot reads as instrument light rather than as a colour floating on grey.
-    void="#1A1613",
-    depth="#221D17",
+    # Deep, cool and slightly blue rather than the neutral charcoal a dark theme usually reaches
+    # for. It makes the cyan read as instrument light rather than as a colour floating on grey.
+    void="#0B0F16",
+    depth="#131926",
 
-    glass=Ink(42, 35, 27, 0.74),
-    glass_hi=Ink(56, 47, 37, 0.82),
-    glass_low=Ink(20, 17, 14, 0.66),
+    glass=Ink(24, 31, 43, 0.74),
+    glass_hi=Ink(35, 45, 60, 0.82),
+    glass_low=Ink(9, 13, 19, 0.66),
 
-    # Warm bone at low alpha reads as a lit edge over any backdrop dark Mica can produce, where a
-    # fixed grey would go muddy over a dark wallpaper.
-    edge=Ink(255, 244, 230, 0.09),
-    edge_faint=Ink(255, 244, 230, 0.04),
-    edge_hi=Ink(255, 244, 230, 0.20),
-    edge_top=Ink(255, 246, 234, 0.13),
+    # Cool bone at low alpha, so the edge reads as lit over any backdrop dark Mica can produce.
+    edge=Ink(198, 216, 244, 0.09),
+    edge_faint=Ink(198, 216, 244, 0.04),
+    edge_hi=Ink(198, 216, 244, 0.20),
+    edge_top=Ink(210, 228, 255, 0.13),
 
-    accent="#E6A870",
-    accent_hi="#F3BC8A",        # hover brightens on a dark ground
-    accent_dim="#6B4A2E",
-    accent_ink="#E6A870",       # 7.76 on the card: the accent is already a usable ink here
-    accent_line="#E6A870",
-    accent_fill=Ink(230, 168, 112, 0.13),   # a dark ground needs less wash to read
-    pill_ink="#3A2A1C",
-    on_accent_disabled=Ink(242, 231, 218, 0.45),
-    rule=Ink(230, 168, 112, 0.55),   # damped: a full-strength 1px apricot rule outshouts its own
-                                     # sections on a dark ground
+    accent="#38BDF8",
+    accent_hi="#7DD3FC",
+    accent_dim="#1E4459",
+    accent_ink="#38BDF8",
+    accent_line="#38BDF8",
+    accent_fill=Ink(56, 189, 248, 0.13),
+    pill_ink="#03222E",
+    on_accent_disabled=Ink(232, 239, 249, 0.45),
+    rule=Ink(56, 189, 248, 0.55),
 
-    ok="#8FC154",               # 8.50 / 7.55 / 6.57
-    warn="#EFD03B",             # 11.78 / 10.46 / 9.11
-    danger="#E7745E",           # 6.04 / 5.42 / 4.72
-    danger_hi="#EE8A75",
-    danger_ink="#2C1008",       # 5.96 on the danger fill
-    ok_fill=Ink(143, 193, 84, 0.13),
-    warn_fill=Ink(239, 208, 59, 0.13),
-    # 0.11, not the 0.13 its warn/ok siblings use: DANGER as an ink on its own fill is the
-    # tightest pairing in either palette, and at 0.13 a #Error label inside a #BannerError
-    # measured 4.47:1 -- a hair under AA, on the one message that most needs reading. Two
-    # points of alpha buys 4.63:1 and is not perceptible as a tint change.
-    danger_fill=Ink(231, 116, 94, 0.11),
+    ok="#4ADE80",
+    warn="#FACC15",
+    danger="#FB7185",
+    danger_hi="#FDA4AF",
+    danger_ink="#2B0A12",
+    ok_fill=Ink(74, 222, 128, 0.13),
+    warn_fill=Ink(250, 204, 21, 0.13),
+    danger_fill=Ink(251, 113, 133, 0.11),
 
-    text="#F2E7DA",             # 14.74 / 13.09 / 11.40
-    text_dim="#AD9C88",         # 6.75 / 6.00 / 5.28
-    text_faint="#8F7E6D",       # 4.60 / 4.09 / 3.59
+    text="#E8EFF9",
+    text_dim="#9FB0C7",
+    text_faint="#75879F",
 
-    ctrl_hover=Ink(74, 62, 49, 0.85),
-    ctrl_pressed=Ink(26, 22, 18, 0.90),
-    ctrl_disabled=Ink(20, 17, 14, 0.35),
-    well=Ink(255, 244, 230, 0.07),
-    overlay=Ink(255, 244, 230, 0.13),
-    overlay_hi=Ink(255, 244, 230, 0.24),
+    ctrl_hover=Ink(45, 58, 76, 0.85),
+    ctrl_pressed=Ink(11, 15, 22, 0.90),
+    ctrl_disabled=Ink(9, 13, 19, 0.35),
+    well=Ink(198, 216, 244, 0.07),
+    overlay=Ink(198, 216, 244, 0.13),
+    overlay_hi=Ink(198, 216, 244, 0.24),
 
-    track_on="#E6A870",
-    track_off="#4A4038",        # the slide's taupe would read as *on* against this ground
-    knob_on="#FFFDF8",
-    knob_off="#A08F7D",         # inverted: a dark knob on a dark track is invisible
+    track_on="#38BDF8",
+    track_off="#3A4759",
+    knob_on="#F8FBFF",
+    knob_off="#93A5BC",
 
-    tile_empty="#1F1A15",
-    tile_pending="#5A4E40",
-    tile_queued="#856825",
-    tile_running="#E6A870",
-    tile_done="#8FC154",
-    tile_carried="#40693A",
-    # Deliberately redder than DANGER, which the other tiles' failed colour used to track. In a
-    # warm palette the danger and accent hues are neighbours, so as a 6px square the failed tile
-    # sat 19.0 dE00 from the running tile -- and running-versus-failed is the one confusion that
-    # matters, since one is fine and the other needs someone. This is 24.9, matching light mode.
-    tile_failed="#E05038",
-    tile_aborted="#6A5A6E",
-    tile_grid_ink="#3A312A",    # minimum 1.36; the old #0B1014 against the old empty was 1.05,
-                                # i.e. the grid was invisible exactly where it was the only thing
-                                # saying the map had rendered
+    # Cool-tuned, but still a real ramp: unmeasured ground is slate, the active tile is the accent,
+    # finished ground is green, and failure is a red pushed away from the accent's hue so the
+    # running/failed pair stays separable at 6px, which is the one confusion that matters.
+    tile_empty="#121926",
+    tile_pending="#46556A",
+    tile_queued="#2A6F97",
+    tile_running="#38BDF8",
+    tile_done="#4ADE80",
+    tile_carried="#2F7D53",
+    tile_failed="#F43F5E",
+    tile_aborted="#7A6E9B",
+    tile_grid_ink="#2B3646",
 
-    extent_ink=Ink(255, 244, 230, 0.30),
-    plate=Ink(26, 22, 18, 0.62),
+    extent_ink=Ink(198, 216, 244, 0.30),
+    plate=Ink(11, 15, 22, 0.62),
 )
 
 # WARN is the one token whose two values are not a lightness translation of each other, and that is
