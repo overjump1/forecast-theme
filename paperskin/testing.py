@@ -15,6 +15,7 @@ Deliberately Qt-free, so a headless CI job can run all of it.
 
 from __future__ import annotations
 
+import ast
 import re
 from pathlib import Path
 from typing import Collection, Iterable
@@ -159,6 +160,52 @@ def _iter_sources(root: Path) -> Iterable[Path]:
         yield path
 
 
+def _parse(path: Path) -> ast.Module | None:
+    """The file's syntax tree, or None if it will not parse.
+
+    Scanners below read the tree rather than the text. A comment or a docstring that *mentions*
+    QGraphicsDropShadowEffect -- to explain why it was removed, which is exactly the comment a
+    codebase that got this right will have -- is prose, not a use, and a text scan cannot tell the
+    difference.
+    """
+    try:
+        return ast.parse(path.read_text(encoding="utf-8"))
+    except (SyntaxError, UnicodeDecodeError):
+        return None
+
+
+def _called_name(node: ast.Call) -> str:
+    func = node.func
+    if isinstance(func, ast.Attribute):
+        return func.attr
+    if isinstance(func, ast.Name):
+        return func.id
+    return ""
+
+
+def _literal_text(node: ast.AST) -> str:
+    """Every string literal reachable inside an expression, joined.
+
+    An f-string arrives as a JoinedStr whose constant parts are the literal text; the interpolated
+    parts are expressions, and their source is recovered separately so that a call like
+    ``setStyleSheet(f"color: {pal.text}")`` is still recognised as carrying a colour.
+    """
+    parts = []
+    for child in ast.walk(node):
+        if isinstance(child, ast.Constant) and isinstance(child.value, str):
+            parts.append(child.value)
+        elif isinstance(child, ast.Attribute):
+            parts.append(child.attr)
+        elif isinstance(child, ast.Name):
+            parts.append(child.id)
+    return " ".join(parts)
+
+
+# Palette field names that are colours. Used to spot a colour reaching an inline stylesheet through
+# a variable rather than as a literal.
+_COLOUR_HINTS = ("color:", "background:", "border-color:")
+
+
 def inline_colour_stylesheets(root: Path, *, allow: Collection[str] = ()) -> list[str]:
     """Every ``setStyleSheet`` call in ``root`` that carries a colour.
 
@@ -167,10 +214,13 @@ def inline_colour_stylesheets(root: Path, *, allow: Collection[str] = ()) -> lis
     theme switch. Colour belongs in the application sheet, reached by object name or by the ``tone``
     dynamic property.
 
+    A colourless inline sheet is not reported: making a scroll area's viewport transparent is the
+    standard Qt idiom and has nothing to do with the palette.
+
     Args:
         root: The consuming package's source directory.
-        allow: File *names* exempted -- the module that installs the application sheet, and an
-            app's own ``qss_extra`` module. Keep this list as short as it can be.
+        allow: File *names* exempted. Keep this list as short as it can be, and write down why each
+            entry is on it.
 
     Returns:
         ``"path:line: source"`` for each offender, ready to paste into an assertion message.
@@ -179,12 +229,32 @@ def inline_colour_stylesheets(root: Path, *, allow: Collection[str] = ()) -> lis
     for path in _iter_sources(root):
         if path.name in allow:
             continue
-        for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
-            if "setStyleSheet(" not in line:
+        tree = _parse(path)
+        if tree is None:
+            continue
+        lines = path.read_text(encoding="utf-8").splitlines()
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call) or _called_name(node) != "setStyleSheet":
                 continue
-            if re.search(r"#[0-9A-Fa-f]{3,8}", line) or re.search(r"rgba?\(\s*\d", line)                     or "color:" in line or "pal." in line:
-                offenders.append(f"{path}:{number}: {line.strip()}")
+            text = " ".join(_literal_text(arg) for arg in node.args)
+            has_colour = (
+                re.search(r"#[0-9A-Fa-f]{3,8}", text)
+                or re.search(r"rgba?\(\s*\d", text)
+                or any(hint in text for hint in _COLOUR_HINTS)
+            )
+            if has_colour:
+                source = lines[node.lineno - 1].strip() if node.lineno <= len(lines) else ""
+                offenders.append(f"{path}:{node.lineno}: {source}")
     return offenders
+
+
+_EFFECT_NAMES = frozenset({
+    "setGraphicsEffect",
+    "QGraphicsDropShadowEffect",
+    "QGraphicsBlurEffect",
+    "QGraphicsColorizeEffect",
+    "QGraphicsOpacityEffect",
+})
 
 
 def graphics_effects(root: Path) -> list[str]:
@@ -192,14 +262,26 @@ def graphics_effects(root: Path) -> list[str]:
 
     On a window with any translucency Qt renders an effected widget through an offscreen cache and
     derives its damage region from the effect's bounding rect, which leaves ghosts of the previous
-    frame behind. Depth comes from translucent fills and a one-pixel edge instead; an outer window
-    shadow, if an app needs one, is a cached ``QPixmap``.
+    frame behind. Depth comes from translucent fills and a one-pixel edge instead; a fade is a
+    ``QVariantAnimation`` over a painted alpha, and an outer window shadow -- if an app has a
+    frameless window that needs one -- is a cached ``QPixmap``.
+
+    Reads the syntax tree, so the comment explaining why the effect was removed does not count as
+    using one.
     """
-    pattern = re.compile(r"setGraphicsEffect|QGraphicsDropShadowEffect|QGraphicsBlurEffect"
-                         r"|QGraphicsColorizeEffect|QGraphicsOpacityEffect")
     offenders = []
     for path in _iter_sources(root):
-        for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
-            if pattern.search(line) and not line.strip().startswith("#"):
-                offenders.append(f"{path}:{number}: {line.strip()}")
-    return offenders
+        tree = _parse(path)
+        if tree is None:
+            continue
+        lines = path.read_text(encoding="utf-8").splitlines()
+        for node in ast.walk(tree):
+            name = ""
+            if isinstance(node, ast.Attribute):
+                name = node.attr
+            elif isinstance(node, ast.Name):
+                name = node.id
+            if name in _EFFECT_NAMES:
+                source = lines[node.lineno - 1].strip() if node.lineno <= len(lines) else ""
+                offenders.append(f"{path}:{node.lineno}: {source}")
+    return sorted(set(offenders))
