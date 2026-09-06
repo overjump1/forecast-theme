@@ -22,7 +22,7 @@ is shaped to make that the easy path.
 
 from __future__ import annotations
 
-from . import testing
+from . import export, testing
 from .geometry import (
     RADIUS_CTRL,
     RADIUS_PANEL,
@@ -55,7 +55,7 @@ from .palette import (
 )
 from .sheet import CONTRACT_NAMES, base_qss, tone_rules
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 __all__ = [
     # palette
@@ -67,8 +67,8 @@ __all__ = [
     "S1", "S2", "S3", "S4", "S5", "S6", "S7",
     # sheet
     "base_qss", "tone_rules", "CONTRACT_NAMES",
-    # testing helpers
-    "testing",
+    # non-Qt surfaces
+    "testing", "export",
     "__version__",
 ]
 
