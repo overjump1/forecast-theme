@@ -10,10 +10,10 @@ from __future__ import annotations
 
 import pytest
 
-import paperskin
+import forecast_theme
 
 BOTH = pytest.mark.parametrize(
-    "pal", [paperskin.LIGHT, paperskin.DARK], ids=["light", "dark"])
+    "pal", [forecast_theme.LIGHT, forecast_theme.DARK], ids=["light", "dark"])
 
 TILE_STATES = ("empty", "pending", "queued", "running", "done", "carried_over", "failed",
                "aborted")

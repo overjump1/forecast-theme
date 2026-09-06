@@ -58,17 +58,17 @@ def font_dir() -> Path:
     """Directory holding the bundled TTFs, in a source tree or a frozen bundle.
 
     ``importlib.resources`` is deliberately not used here. Under PyInstaller this package's ``.py``
-    files live inside the PYZ archive, so ``files("paperskin")`` resolves to a path that either does
+    files live inside the PYZ archive, so ``files("forecast_theme")`` resolves to a path that either does
     not exist on disk or points at the build machine's source tree -- not at ``_MEIPASS`` where the
     collected data actually landed. Checking ``_MEIPASS`` first is the form that works in both
     modes.
 
-    The package ships a PyInstaller hook (``paperskin/__pyinstaller``) that collects this directory
+    The package ships a PyInstaller hook (``forecast_theme/__pyinstaller``) that collects this directory
     automatically, so a consuming app's ``.spec`` needs no fonts entry of its own.
     """
     base = getattr(sys, "_MEIPASS", None)
     if base:
-        bundled = Path(base) / "paperskin" / "fonts"
+        bundled = Path(base) / "forecast_theme" / "fonts"
         if bundled.is_dir():
             return bundled
     return Path(__file__).resolve().parent / "fonts"

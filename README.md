@@ -1,16 +1,16 @@
-# paperskin
+# forecast_theme
 
 The shared design system: one palette, one stylesheet, one set of contrast guarantees, for every
 app in the family.
 
 ```python
 from PyQt6.QtWidgets import QApplication
-import paperskin
+import forecast_theme
 
 app = QApplication(sys.argv)
-faces = paperskin.load_fonts()                    # once per process, never per restyle
-paperskin.use(paperskin.resolve_theme(mode))      # mode is "system" | "light" | "dark"
-paperskin.apply(app, faces, glass=True, extra=my_app_qss(paperskin.active()))
+faces = forecast_theme.load_fonts()                    # once per process, never per restyle
+forecast_theme.use(forecast_theme.resolve_theme(mode))      # mode is "system" | "light" | "dark"
+forecast_theme.apply(app, faces, glass=True, extra=my_app_qss(forecast_theme.active()))
 ```
 
 ## The one mistake everybody makes
@@ -22,7 +22,7 @@ material — all of them survive a theme change *and* a window rebuild, still we
 palette happened to be active when they were built. The symptom is a widget that stays dark after
 switching to light, and it is invisible until someone actually flips the theme.
 
-Read colours inside `paintEvent` via `paperskin.active()`, or re-read them in a `restyle()` hook.
+Read colours inside `paintEvent` via `forecast_theme.active()`, or re-read them in a `restyle()` hook.
 Everything here is shaped to make that the easy path — which is also why the palette is a value
 passed around rather than a set of module globals that `use()` rebinds.
 
@@ -42,7 +42,7 @@ Anything specific to one app — its own widgets, its own dynamic properties —
 `qss_extra()`, appended after the base sheet:
 
 ```python
-app.setStyleSheet(paperskin.base_qss(pal, ...) + "\n" + qss_extra(pal))
+app.setStyleSheet(forecast_theme.base_qss(pal, ...) + "\n" + qss_extra(pal))
 ```
 
 QSS is last-wins at equal specificity, so appending is a real override mechanism as well as an
@@ -55,7 +55,7 @@ covers its own type-scale names. If your app's stylesheet gives a colour to `QLa
 must cover it too:
 
 ```python
-qss_extra = ... + paperskin.tone_rules(pal, hosts=("#CardName", "#RowTitle"))
+qss_extra = ... + forecast_theme.tone_rules(pal, hosts=("#CardName", "#RowTitle"))
 ```
 
 This fails silently — a toned label simply keeps the wrong colour — so each app should test that
@@ -68,7 +68,7 @@ every locally-coloured `QLabel` name appears in its host list.
 2. **No `QGraphicsEffect` anywhere in a consuming tree.** On a translucent window Qt renders an
    effected widget through an offscreen cache and derives damage from the effect's bounding rect,
    leaving ghost frames. Use a `QVariantAnimation` over a painted alpha, and a cached `QPixmap` for
-   an outer window shadow. `paperskin.testing.graphics_effects(root)` checks this.
+   an outer window shadow. `forecast_theme.testing.graphics_effects(root)` checks this.
 3. **Never letter-space Hebrew.** It breaks the visual join between letters and reads as a
    rendering fault. Hierarchy comes from size, weight and colour.
 4. **Font sizes in `pt`, never `px`.** Qt scales `pt` by font DPI and `px` only by
@@ -76,11 +76,11 @@ every locally-coloured `QLabel` name appears in its host list.
 
 ## Testing your app against the design
 
-`paperskin.testing` is public API, not a test file:
+`forecast_theme.testing` is public API, not a test file:
 
 ```python
 from pathlib import Path
-from paperskin import testing
+from forecast_theme import testing
 
 def test_no_inline_colour_stylesheets():
     assert not testing.inline_colour_stylesheets(Path("myapp"), allow={"theme_ext.py"})
@@ -89,7 +89,7 @@ def test_no_graphics_effects():
     assert not testing.graphics_effects(Path("myapp"))
 
 def test_my_extra_sheet_compiles():
-    for pal in (paperskin.LIGHT, paperskin.DARK):
+    for pal in (forecast_theme.LIGHT, forecast_theme.DARK):
         testing.check_qss(qss_extra(pal))
 ```
 
@@ -105,14 +105,14 @@ Hebrew bolted on.
 
 The package ships a PyInstaller hook, so **a consuming app's `.spec` needs no `datas` entry for
 fonts**. A font-less bundle degrades silently to a system fallback, so verify once per app that the
-frozen build really contains `paperskin/fonts/Heebo.ttf` rather than trusting it.
+frozen build really contains `forecast_theme/fonts/Heebo.ttf` rather than trusting it.
 
 ## Versioning
 
 Pin by tag. In each consumer's `requirements.txt`:
 
 ```
-paperskin @ git+https://github.com/overjump1/paperskin@v1.0.0
+forecast-theme @ git+https://github.com/overjump1/forecast-theme@v1.0.0
 ```
 
 For an environment that cannot reach GitHub, that one line points at an internal clone instead;

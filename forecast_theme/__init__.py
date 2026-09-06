@@ -1,16 +1,16 @@
-"""paperskin -- the shared design system.
+"""forecast_theme -- the shared design system.
 
 One palette, one stylesheet, one set of contrast guarantees, for every app in the family.
 
 Typical use, once per process::
 
     from PyQt6.QtWidgets import QApplication
-    import paperskin
+    import forecast_theme
 
     app = QApplication(sys.argv)
-    faces = paperskin.load_fonts()                       # once, never per restyle
-    paperskin.use(paperskin.resolve_theme(mode))         # mode is "system"/"light"/"dark"
-    paperskin.apply(app, faces, glass=True, extra=my_app_qss(paperskin.active()))
+    faces = forecast_theme.load_fonts()                       # once, never per restyle
+    forecast_theme.use(forecast_theme.resolve_theme(mode))         # mode is "system"/"light"/"dark"
+    forecast_theme.apply(app, faces, glass=True, extra=my_app_qss(forecast_theme.active()))
 
 **The one mistake everybody makes.** A colour read at construction time does not follow a later
 ``use()``. A module-level ``QColor``, a dict of colour strings built at import, a THREE.js material
@@ -55,7 +55,7 @@ from .palette import (
 )
 from .sheet import CONTRACT_NAMES, base_qss, tone_rules
 
-__version__ = "0.1.1"
+__version__ = "0.2.0"
 
 __all__ = [
     # palette

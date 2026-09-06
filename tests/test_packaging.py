@@ -5,7 +5,7 @@ from __future__ import annotations
 import pathlib
 import sys
 
-import paperskin
+import forecast_theme
 
 
 def test_fonts_ship_with_the_package():
@@ -15,7 +15,7 @@ def test_fonts_ship_with_the_package():
     -- which is why it is asserted rather than assumed. The equivalent check against a *frozen*
     bundle belongs in each consumer's build script, since only there does ``_MEIPASS`` exist.
     """
-    from paperskin.styling import font_dir      # imports Qt, so keep it local to this test
+    from forecast_theme.styling import font_dir      # imports Qt, so keep it local to this test
 
     directory = font_dir()
     assert directory.is_dir(), f"no font directory at {directory}"
@@ -26,20 +26,20 @@ def test_fonts_ship_with_the_package():
 
 def test_font_licences_ship_alongside_them():
     """These are SIL OFL faces; redistributing them without the licence is not permitted."""
-    from paperskin.styling import font_dir
+    from forecast_theme.styling import font_dir
 
     assert list(font_dir().glob("OFL-*.txt")), "OFL licences missing from the package"
 
 
 def test_public_surface_is_importable():
-    for name in paperskin.__all__:
-        assert hasattr(paperskin, name), f"__all__ promises {name} but it is missing"
+    for name in forecast_theme.__all__:
+        assert hasattr(forecast_theme, name), f"__all__ promises {name} but it is missing"
 
 
 def test_unknown_attribute_still_raises():
     """The lazy ``__getattr__`` must not swallow typos."""
     try:
-        paperskin.no_such_thing
+        forecast_theme.no_such_thing
     except AttributeError:
         pass
     else:
@@ -52,8 +52,8 @@ def test_core_modules_are_qt_free():
     That is what lets the contrast promises be checked in a headless CI job with no PyQt6 wheel,
     and it is a guarantee of the package rather than an accident of where the code came from.
     """
-    for module in ("paperskin.palette", "paperskin.geometry", "paperskin.sheet",
-                   "paperskin.testing"):
+    for module in ("forecast_theme.palette", "forecast_theme.geometry", "forecast_theme.sheet",
+                   "forecast_theme.testing"):
         __import__(module)
         source = pathlib.Path(sys.modules[module].__file__).read_text(encoding="utf-8")
         offenders = [line for line in source.splitlines()
@@ -74,7 +74,7 @@ import sys
 # failing. Submodules are covered too, since importing PyQt6.QtGui imports PyQt6 first.
 sys.modules["PyQt6"] = None
 
-import paperskin as ps
+import forecast_theme as ps
 
 for pal in (ps.LIGHT, ps.DARK):
     ps.testing.assert_readable_tiers(pal)
@@ -90,7 +90,7 @@ except ImportError:
 else:
     raise SystemExit("load_fonts() worked with PyQt6 blocked")
 
-assert sys.modules["PyQt6"] is None, "importing paperskin pulled in Qt"
+assert sys.modules["PyQt6"] is None, "importing forecast_theme pulled in Qt"
 print("OK")
 """
 
@@ -115,9 +115,9 @@ def test_core_surface_works_without_pyqt6_installed():
 def test_pyinstaller_hook_is_discoverable():
     """Without this the fonts do not reach a frozen build, and see the docstring above for how
     quietly that fails."""
-    from paperskin.__pyinstaller import get_hook_dirs
+    from forecast_theme.__pyinstaller import get_hook_dirs
 
     dirs = [pathlib.Path(d) for d in get_hook_dirs()]
     assert dirs, "no hook dirs registered"
-    assert any((d / "hook-paperskin.py").is_file() for d in dirs), (
-        f"hook-paperskin.py not found in {dirs}")
+    assert any((d / "hook-forecast_theme.py").is_file() for d in dirs), (
+        f"hook-forecast_theme.py not found in {dirs}")

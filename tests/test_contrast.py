@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from conftest import BOTH, TILE_STATES
 
-from paperskin import testing
+from forecast_theme import testing
 
 
 @BOTH
