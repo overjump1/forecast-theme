@@ -35,22 +35,6 @@ def test_density_changes_control_sizing():
 
 
 @pytest.mark.parametrize("metrics", PRESETS, ids=lambda m: f"{m.font_pt}pt")
-def test_pill_radius_is_no_more_than_half_the_rendered_height(metrics):
-    """A radius past half the widget's height silently falls back to square corners.
-
-    Qt does not clamp an oversized radius to a capsule, so a pill radius has to be measured
-    against the padding and font beside it. The estimate here is deliberately generous -- it
-    catches a radius carried over from another density, not a one-pixel miss.
-    """
-    for pad, radius in ((metrics.pill_pad, metrics.pill_radius),
-                        (metrics.chip_pad, metrics.chip_radius)):
-        line_px = metrics.font_pt * 96 / 72 * 1.4
-        height = pad[0] * 2 + 2 + line_px
-        assert radius <= height / 2 + 1, (
-            f"radius {radius} exceeds half of the ~{height:.0f}px rendered height")
-
-
-@pytest.mark.parametrize("metrics", PRESETS, ids=lambda m: f"{m.font_pt}pt")
 def test_secondary_tier_stays_below_the_body_tier(metrics):
     assert metrics.small_pt < metrics.font_pt
     assert metrics.font_pt < metrics.section_pt < metrics.title_pt
@@ -69,4 +53,19 @@ def test_plain_and_pill_buttons_share_a_height(metrics):
 def test_mismatched_button_padding_is_rejected():
     with pytest.raises(ValueError, match="same height|vertical padding"):
         geometry.Metrics(font_pt=10, small_pt=9, btn_pad=(6, 14), pill_pad=(9, 26),
-                         pill_radius=20, chip_pad=(4, 13), chip_radius=14)
+                         pill_radius=20, pill_height=40, chip_pad=(4, 13),
+                         chip_radius=14, chip_height=28)
+
+
+@pytest.mark.parametrize("metrics", PRESETS, ids=lambda m: f"{m.font_pt}pt")
+def test_pill_radii_are_at_most_half_the_measured_height(metrics):
+    """Qt squares the corners rather than clamping, so a radius may never exceed half."""
+    assert metrics.pill_radius <= metrics.pill_height // 2
+    assert metrics.chip_radius <= metrics.chip_height // 2
+
+
+def test_an_oversized_radius_is_rejected():
+    with pytest.raises(ValueError, match="square corners"):
+        geometry.Metrics(font_pt=18, small_pt=14, btn_pad=(14, 26), pill_pad=(14, 34),
+                         pill_radius=32, pill_height=66, chip_pad=(8, 22),
+                         chip_radius=24, chip_height=46)

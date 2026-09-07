@@ -37,9 +37,13 @@ class Metrics:
             side are the same height -- the whole reason paper-gui used to carry its own ``#Btn``
             rule instead of the shared one.
         pill_pad: Padding for ``#Primary`` and ``#Danger``.
-        pill_radius: Half the rendered height of a button wearing ``pill_pad``.
+        pill_radius: Half of ``pill_height``.
+        pill_height: The height ``#Primary`` actually renders at, measured on Windows at 96dpi
+            with ``tools/measure_pills.py``. Recorded rather than computed: an arithmetic
+            estimate of Qt's line box was wrong by 6px and shipped square-cornered chips.
         chip_pad: Padding for ``#Chip``.
-        chip_radius: Half the rendered height of a chip.
+        chip_radius: Half of ``chip_height``.
+        chip_height: The height ``#Chip`` actually renders at, measured the same way.
     """
 
     font_pt: int
@@ -47,14 +51,23 @@ class Metrics:
     btn_pad: tuple[int, int]
     pill_pad: tuple[int, int]
     pill_radius: int
+    pill_height: int
     chip_pad: tuple[int, int]
     chip_radius: int
+    chip_height: int
 
     def __post_init__(self) -> None:
         if self.btn_pad[0] != self.pill_pad[0]:
             raise ValueError(
                 "btn_pad and pill_pad must share a vertical padding, or a plain button and a "
                 f"pill next to it are different heights: {self.btn_pad} vs {self.pill_pad}")
+        for what, radius, height in (("pill", self.pill_radius, self.pill_height),
+                                     ("chip", self.chip_radius, self.chip_height)):
+            if radius > height // 2:
+                raise ValueError(
+                    f"{what}_radius {radius} is past half of the {height}px it renders at, so Qt "
+                    "draws square corners instead of a capsule; re-measure with "
+                    "tools/measure_pills.py")
 
     @property
     def title_pt(self) -> int:
@@ -73,8 +86,10 @@ COMPACT = Metrics(
     btn_pad=(9, 14),
     pill_pad=(9, 26),
     pill_radius=20,
+    pill_height=40,
     chip_pad=(4, 13),
     chip_radius=14,
+    chip_height=28,
 )
 """A dense desktop tool, driven with a mouse at arm's length."""
 
@@ -84,7 +99,9 @@ COMFORTABLE = Metrics(
     btn_pad=(14, 26),
     pill_pad=(14, 34),
     pill_radius=32,
+    pill_height=66,
     chip_pad=(8, 22),
-    chip_radius=24,
+    chip_radius=23,
+    chip_height=46,
 )
 """A full-screen operator window, read and driven from across a desk."""
