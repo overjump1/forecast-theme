@@ -33,6 +33,10 @@ Two widgets that look alike across apps must therefore wear the same name here r
 restyled locally: a card is ``#Card`` in all of them, not ``#Step`` in one and ``#ModuleCard`` in
 another. Density is the one axis apps legitimately differ on, and it travels as a ``Metrics``
 preset rather than as an app-local override of ``QPushButton``.
+
+Surfaces are styled by object name alone -- ``#Card``, not ``QFrame#Card``. A card is not always a
+QFrame: paper-gui's module card is a plain QWidget subclass that paints its own accent rule, and a
+class-qualified selector silently skipped it, leaving the card with no fill and no border at all.
 """
 
 from __future__ import annotations
@@ -184,21 +188,21 @@ QLabel#Mono {{
 {tone_rules(pal)}
 
 /* ---------------------------------------------------------------- cards */
-QFrame#Card {{
+#Card {{
     background: {pal.glass};
     border: 1px solid {pal.edge};
     border-top: 1px solid {pal.edge_top};
     border-radius: {RADIUS_PANEL}px;
 }}
-QFrame#Card[hovered="true"] {{ background: {pal.glass_hi}; border-color: {pal.accent_line}; }}
-QFrame#Card[focused="true"] {{ border-color: {pal.accent_line}; }}
-QFrame#Card[broken="true"] {{ border-color: {pal.danger}; }}
-QFrame#Card[state="running"] {{
+#Card[hovered="true"] {{ background: {pal.glass_hi}; border-color: {pal.accent_line}; }}
+#Card[focused="true"] {{ border-color: {pal.accent_line}; }}
+#Card[broken="true"] {{ border-color: {pal.danger}; }}
+#Card[state="running"] {{
     background: {pal.accent_fill}; border: 1px solid {pal.accent_line};
 }}
-QFrame#Card[state="done"] {{ background: {pal.ok_fill}; border: 1px solid {pal.ok}; }}
-QFrame#Card[state="warn"] {{ background: {pal.warn_fill}; border: 1px solid {pal.warn}; }}
-QFrame#Card[state="failed"] {{ background: {pal.danger_fill}; border: 1px solid {pal.danger}; }}
+#Card[state="done"] {{ background: {pal.ok_fill}; border: 1px solid {pal.ok}; }}
+#Card[state="warn"] {{ background: {pal.warn_fill}; border: 1px solid {pal.warn}; }}
+#Card[state="failed"] {{ background: {pal.danger_fill}; border: 1px solid {pal.danger}; }}
 
 QLabel#CardName {{
     font-family: "{display}"; font-size: {metrics.section_pt}pt; font-weight: 700;
@@ -208,18 +212,18 @@ QLabel#CardDesc {{ font-size: {metrics.small_pt}pt; color: {pal.text_dim}; }}
 QLabel#CardMeta {{
     font-family: "{mono}"; font-size: {metrics.small_pt}pt; color: {pal.text_faint};
 }}
-QFrame#Card[dim="true"] QLabel#CardName {{ color: {pal.text_dim}; }}
+#Card[dim="true"] QLabel#CardName {{ color: {pal.text_dim}; }}
 
 /* ---------------------------------------------------------------- rows */
-QFrame#Row {{
+#Row {{
     background: {pal.glass}; border: 1px solid {pal.edge}; border-radius: {RADIUS_CTRL}px;
 }}
-QFrame#Row[hovered="true"] {{ border-color: {pal.accent_line}; }}
-QFrame#Row[selected="true"] {{ border-color: {pal.accent_line}; background: {pal.accent_fill}; }}
+#Row[hovered="true"] {{ border-color: {pal.accent_line}; }}
+#Row[selected="true"] {{ border-color: {pal.accent_line}; background: {pal.accent_fill}; }}
 QLabel#RowName {{ font-weight: 600; color: {pal.text}; }}
 QLabel#RowNote {{ font-size: {metrics.small_pt}pt; color: {pal.text_dim}; }}
 
-QFrame#Rule {{
+#Rule {{
     background: {pal.rule}; border: none; max-height: 1px; min-height: 1px;
 }}
 
@@ -389,14 +393,14 @@ QToolTip {{
 }}
 
 /* ---------------------------------------------------------------- banners */
-QFrame#Banner {{
+#Banner {{
     background: {pal.glass_hi}; border: 1px solid {pal.edge_hi}; border-radius: {RADIUS_CTRL}px;
 }}
-QFrame#BannerWarn {{
+#BannerWarn {{
     background: {pal.warn_fill}; border: 1px solid {pal.warn};
     border-radius: {RADIUS_CTRL}px;
 }}
-QFrame#BannerError {{
+#BannerError {{
     background: {pal.danger_fill}; border: 1px solid {pal.danger};
     border-radius: {RADIUS_CTRL}px;
 }}

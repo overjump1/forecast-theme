@@ -32,7 +32,10 @@ class Metrics:
     Attributes:
         font_pt: Base body size.
         small_pt: The secondary tier: notes, hints, versions, monospace.
-        btn_pad: Vertical and horizontal padding for a stock ``QPushButton``.
+        btn_pad: Vertical and horizontal padding for a stock ``QPushButton``. Its vertical
+            half must equal ``pill_pad``'s, so a primary and a secondary button standing side by
+            side are the same height -- the whole reason paper-gui used to carry its own ``#Btn``
+            rule instead of the shared one.
         pill_pad: Padding for ``#Primary`` and ``#Danger``.
         pill_radius: Half the rendered height of a button wearing ``pill_pad``.
         chip_pad: Padding for ``#Chip``.
@@ -46,6 +49,12 @@ class Metrics:
     pill_radius: int
     chip_pad: tuple[int, int]
     chip_radius: int
+
+    def __post_init__(self) -> None:
+        if self.btn_pad[0] != self.pill_pad[0]:
+            raise ValueError(
+                "btn_pad and pill_pad must share a vertical padding, or a plain button and a "
+                f"pill next to it are different heights: {self.btn_pad} vs {self.pill_pad}")
 
     @property
     def title_pt(self) -> int:
@@ -61,7 +70,7 @@ class Metrics:
 COMPACT = Metrics(
     font_pt=10,
     small_pt=9,
-    btn_pad=(6, 14),
+    btn_pad=(9, 14),
     pill_pad=(9, 26),
     pill_radius=20,
     chip_pad=(4, 13),
@@ -72,7 +81,7 @@ COMPACT = Metrics(
 COMFORTABLE = Metrics(
     font_pt=18,
     small_pt=14,
-    btn_pad=(12, 26),
+    btn_pad=(14, 26),
     pill_pad=(14, 34),
     pill_radius=32,
     chip_pad=(8, 22),

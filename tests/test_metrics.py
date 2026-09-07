@@ -54,3 +54,19 @@ def test_pill_radius_is_no_more_than_half_the_rendered_height(metrics):
 def test_secondary_tier_stays_below_the_body_tier(metrics):
     assert metrics.small_pt < metrics.font_pt
     assert metrics.font_pt < metrics.section_pt < metrics.title_pt
+
+
+@pytest.mark.parametrize("metrics", PRESETS, ids=lambda m: f"{m.font_pt}pt")
+def test_plain_and_pill_buttons_share_a_height(metrics):
+    """A primary and a secondary button side by side must be the same height.
+
+    They differ only in horizontal padding and radius. paper-gui carried its own ``#Btn`` rule
+    for years because the shared plain button was shorter than ``#Primary``.
+    """
+    assert metrics.btn_pad[0] == metrics.pill_pad[0]
+
+
+def test_mismatched_button_padding_is_rejected():
+    with pytest.raises(ValueError, match="same height|vertical padding"):
+        geometry.Metrics(font_pt=10, small_pt=9, btn_pad=(6, 14), pill_pad=(9, 26),
+                         pill_radius=20, chip_pad=(4, 13), chip_radius=14)

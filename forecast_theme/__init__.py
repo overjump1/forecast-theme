@@ -59,7 +59,7 @@ from .palette import (
 )
 from .sheet import CONTRACT_NAMES, base_qss, tone_rules
 
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 
 __all__ = [
     # palette
