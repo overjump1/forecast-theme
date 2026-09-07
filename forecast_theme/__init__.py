@@ -22,7 +22,8 @@ is shaped to make that the easy path.
 
 from __future__ import annotations
 
-from . import export, testing
+from . import export, launcher_prefs, testing
+from .derive import alpha, ink_on, mix
 from .geometry import (
     COMFORTABLE,
     COMPACT,
@@ -59,13 +60,15 @@ from .palette import (
 )
 from .sheet import CONTRACT_NAMES, base_qss, tone_rules
 
-__version__ = "0.5.0"
+__version__ = "1.0.0"
 
 __all__ = [
     # palette
     "Ink", "Palette", "Tone", "LIGHT", "DARK", "PALETTES",
     "MODE_LIGHT", "MODE_DARK", "MODE_SYSTEM", "MODES",
     "active", "use", "resolve", "token_names", "qc",
+    # derive
+    "alpha", "mix", "ink_on",
     # geometry
     "RADIUS_PANEL", "RADIUS_CTRL", "RADIUS_PILL_LG", "RADIUS_PILL", "RADIUS_SM",
     "Metrics", "COMPACT", "COMFORTABLE",
@@ -73,7 +76,7 @@ __all__ = [
     # sheet
     "base_qss", "tone_rules", "CONTRACT_NAMES",
     # non-Qt surfaces
-    "testing", "export",
+    "testing", "export", "launcher_prefs",
     "__version__",
 ]
 
@@ -90,6 +93,7 @@ _LAZY_ATTRS = {
     name: ".styling" for name in (
         "Faces", "load_fonts", "apply", "set_tone", "repolish",
         "system_prefers_light", "resolve_theme", "font_dir",
+        "system_language", "resolve_shared_theme", "resolve_shared_language",
     )
 }
 _LAZY_ATTRS["ToggleSwitch"] = ".widgets.switch"

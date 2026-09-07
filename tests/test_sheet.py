@@ -25,7 +25,7 @@ def test_glass_flag_changes_the_window_fill(pal):
     path an app with its own opaque chrome should always take. It has to look deliberate rather
     than broken, which means an opaque base rather than a missing one."""
     assert "QMainWindow { background: transparent; }" in forecast_theme.base_qss(pal, glass=True)
-    assert f"QMainWindow {{ background: {pal.void}; }}" in forecast_theme.base_qss(pal, glass=False)
+    assert f"QMainWindow {{ background: {pal.bg}; }}" in forecast_theme.base_qss(pal, glass=False)
 
 
 @BOTH
@@ -111,8 +111,11 @@ def test_no_pixel_font_sizes(pal):
 
 
 @BOTH
-def test_every_fill_token_is_used(pal):
-    """A token nobody uses is a token nobody maintains."""
+def test_every_status_fill_is_used(pal):
+    """A derived fill nobody uses is a fill nobody maintains."""
+    from forecast_theme.derive import alpha
+
     text = forecast_theme.base_qss(pal)
-    for token in ("accent_fill", "warn_fill", "danger_fill"):
-        assert str(getattr(pal, token)) in text, f"{token} is dead weight in the base sheet"
+    for base in (pal.accent, pal.warn, pal.danger):
+        assert str(alpha(base, 0.14 if base is pal.accent else 0.12)) in text, (
+            f"a fill derived from {base} is dead weight in the base sheet")

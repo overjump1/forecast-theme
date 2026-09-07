@@ -42,16 +42,20 @@ def test_css_values_match_the_palette(pal):
     block = css.split(':root[data-theme="light"] {')[1] if not pal.dark \
         else css.split(':root, :root[data-theme="dark"] {')[1]
     block = block.split("}")[0]
-    for field in ("accent", "text", "void", "danger"):
+    for field in ("accent", "text", "bg", "danger"):
         assert f"--ft-{field}: {getattr(pal, field)};" in block
 
 
-def test_translucent_tokens_keep_their_alpha():
-    """An Ink renders as rgba(...) in CSS, which is valid there -- unlike QColor, CSS parses it."""
+def test_exported_core_tokens_are_solid_colours():
+    """The minimal core has no translucent field left on ``Palette`` -- every hover/fill tint is
+    computed by a consumer from these solid colours (``derive.alpha()``/``mix()`` on the Python
+    side; an equivalent helper on the JS side), not exported pre-baked."""
     css = export.css_vars()
-    assert re.search(r"--ft-glass: rgba\(\d+, \d+, \d+, [\d.]+\);", css)
-    # and the channels are emitted too, so a one-off alpha needs no new token
-    assert re.search(r"--ft-glass-rgb: \d+, \d+, \d+;", css)
+    for field in forecast_theme.token_names():
+        if field in ("name", "dark"):
+            continue
+        prop = f"--ft-{field.replace('_', '-')}:"
+        assert not re.search(prop + r"\s*rgba\(", css), f"{field} exported as a translucent value"
 
 
 def test_js_module_carries_the_three_forms():

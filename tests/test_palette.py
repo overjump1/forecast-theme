@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import pytest
-from conftest import BOTH, TILE_STATES
+from conftest import BOTH
 
 import forecast_theme
 
@@ -18,12 +18,7 @@ def test_both_palettes_define_every_token():
 
 
 def test_palettes_are_not_a_copy_of_each_other():
-    """Guards against a mode added by copy-paste.
-
-    A handful of tokens are genuinely mode-independent -- the accent as a fill, the switch's "on"
-    track, the decorative rule -- so this checks the proportion rather than demanding every token
-    differ.
-    """
+    """Guards against a mode added by copy-paste."""
     shared = [n for n in forecast_theme.token_names()
               if str(getattr(forecast_theme.LIGHT, n)) == str(getattr(forecast_theme.DARK, n))]
     assert len(shared) < len(forecast_theme.token_names()) // 3, f"suspiciously shared: {shared}"
@@ -63,19 +58,6 @@ def test_tone_value_is_the_qss_property_value(pal):
     for tone in forecast_theme.Tone:
         assert isinstance(tone.value, str)
         assert tone.value == str(tone.value).lower()
-
-
-@BOTH
-def test_every_tile_state_has_its_own_colour(pal):
-    colours = [pal.tile(state) for state in TILE_STATES]
-    assert len(set(colours)) == len(TILE_STATES), "two tile states share a colour"
-
-
-@BOTH
-def test_unknown_tile_state_falls_back(pal):
-    """Unlike ``tone()`` this falls back rather than raising: a tile map renders thousands of
-    rectangles per frame and a new pipeline state should not crash the paint."""
-    assert pal.tile("no-such-state") == pal.tile_pending
 
 
 def test_ink_renders_both_forms():

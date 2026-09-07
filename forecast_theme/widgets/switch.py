@@ -24,6 +24,7 @@ from PyQt6.QtGui import QColor, QPainter, QPen
 from PyQt6.QtWidgets import QAbstractButton
 
 from .. import palette as theme
+from ..derive import mix
 
 TRACK_W = 40
 TRACK_H = 22
@@ -102,10 +103,17 @@ class ToggleSwitch(QAbstractButton):
         radius = TRACK_H / 2
         track = QRectF(FOCUS_PAD, FOCUS_PAD, TRACK_W, TRACK_H)
 
+        # Track and knob colours are computed from the core palette rather than read off their
+        # own stored tokens: off is a muted step from the surface toward the ink, on is the
+        # accent; the knob is always a near-white circle, deepened slightly when off.
+        track_off = mix(pal.surface, pal.text, 0.35)
+        knob_off = mix(pal.text, "#FFFFFF", 0.55)
+        knob_on = mix(pal.text, "#FFFFFF", 0.92)
+
         # The two ends of the ramp, blended by the slide position, so the colour and the knob
         # arrive together instead of the fill snapping ahead of the movement.
-        track_colour = _blend(QColor(pal.track_off), QColor(pal.track_on), self._offset)
-        knob_colour = _blend(QColor(pal.knob_off), QColor(pal.knob_on), self._offset)
+        track_colour = _blend(QColor(track_off), QColor(pal.accent), self._offset)
+        knob_colour = _blend(QColor(knob_off), QColor(knob_on), self._offset)
         if not self.isEnabled():
             track_colour.setAlphaF(0.4)
             knob_colour.setAlphaF(0.55)
@@ -136,7 +144,7 @@ class ToggleSwitch(QAbstractButton):
         # A white knob on the apricot track is 2.06:1, so in light mode it gets a rim. State is
         # also carried by position, which is why this is a refinement rather than the whole signal.
         if not pal.dark and self._offset > 0.5:
-            painter.setPen(QColor(pal.accent_line))
+            painter.setPen(QColor(pal.accent_ink))
         painter.setBrush(knob_colour)
         painter.drawEllipse(knob)
 

@@ -78,8 +78,6 @@ import forecast_theme as ps
 
 for pal in (ps.LIGHT, ps.DARK):
     ps.testing.assert_readable_tiers(pal)
-    ps.testing.assert_decorative_tiers(pal)
-    ps.testing.assert_tinted_fills(pal)
     assert ps.base_qss(pal)
     assert ps.tone_rules(pal)
 

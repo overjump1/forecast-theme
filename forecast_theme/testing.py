@@ -69,17 +69,10 @@ def contrast(fg, bg) -> float:
 
 
 def surfaces(pal: Palette) -> dict[str, tuple[int, int, int]]:
-    """The five opaque surfaces text can land on, resolved from the glass tokens.
-
-    Recomputed rather than hardcoded, so tuning an alpha cannot silently invalidate the numbers
-    the design is checked against.
-    """
+    """The two opaque surfaces text can land on: the page ground and a raised surface."""
     return {
-        "ground": rgb(pal.void),
-        "card": over(pal.glass, pal.void),
-        "recessed": over(pal.glass_low, pal.void),
-        "raised": over(pal.glass_hi, pal.void),
-        "popup": rgb(pal.depth),
+        "bg": rgb(pal.bg),
+        "surface": rgb(pal.surface),
     }
 
 
@@ -88,8 +81,6 @@ def surfaces(pal: Palette) -> dict[str, tuple[int, int, int]]:
 #
 # Text that has to be read: WCAG AA for normal text.
 READABLE = ("text", "text_dim", "ok", "warn", "danger", "accent_ink")
-# Decoration and hints: the large-text / non-text floor, WCAG 1.4.11.
-DECORATIVE = ("text_faint", "accent_line")
 
 AA_NORMAL = 4.5
 AA_LARGE = 3.0
@@ -104,43 +95,10 @@ def assert_readable_tiers(pal: Palette) -> None:
                 f"{pal.name}: {token} on {where} is {ratio:.2f}:1, needs {AA_NORMAL}")
 
 
-def assert_decorative_tiers(pal: Palette) -> None:
-    """Faint text and thin accent graphics clear 3:1."""
-    for token in DECORATIVE:
-        for where, ground in surfaces(pal).items():
-            ratio = contrast(getattr(pal, token), ground)
-            assert ratio >= AA_LARGE, (
-                f"{pal.name}: {token} on {where} is {ratio:.2f}:1, needs {AA_LARGE}")
-
-
-# A tinted fill and the ink that lands on it. These are the pairings the base sheet actually
-# creates -- a #BannerWarn holding a #Warn label, a checked #Chip, a tinted row -- and they are the
-# tightest in the design, because a fill has to stay subtle while its own ink stays readable.
-TINTED_PAIRS = (
-    ("accent_fill", ("text", "accent_ink")),
-    ("ok_fill", ("text", "ok")),
-    ("warn_fill", ("text", "warn")),
-    ("danger_fill", ("text", "danger")),
-    ("ok_fill_hi", ("text", "ok")),
-    ("warn_fill_hi", ("text", "warn")),
-    ("danger_fill_hi", ("text", "danger")),
-)
-
-
-def assert_tinted_fills(pal: Palette) -> None:
-    """Every ink the sheet puts on a tinted fill clears 4.5:1 over the card it sits on.
-
-    Checked because it is the pairing most likely to drift: nudging a fill's alpha for looks moves
-    a contrast ratio nobody was thinking about. The dark ``danger``/``danger_fill`` pair is the
-    tightest of the eight and is why this test exists.
-    """
-    card = surfaces(pal)["card"]
-    for fill, inks in TINTED_PAIRS:
-        ground = over(getattr(pal, fill), card)
-        for ink in inks:
-            ratio = contrast(getattr(pal, ink), ground)
-            assert ratio >= AA_NORMAL, (
-                f"{pal.name}: {ink} on {fill} over card is {ratio:.2f}:1, needs {AA_NORMAL}")
+# Fills and their derived tokens (``ok_fill``, ``accent_fill``, ...) are no longer stored on
+# ``Palette`` -- they are computed at the point of use by ``derive.alpha()`` in ``sheet.py``, so
+# there is nothing left on the palette itself for ``assert_tinted_fills`` to check. The base sheet's
+# own build (``tests/test_sheet.py`` in this package) is what exercises those combinations now.
 
 
 def check_qss(sheet: str) -> None:

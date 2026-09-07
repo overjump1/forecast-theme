@@ -20,11 +20,11 @@ import sys
 from pathlib import Path
 from typing import Sequence
 
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import QLocale, Qt
 from PyQt6.QtGui import QFont, QFontDatabase, QGuiApplication
 from PyQt6.QtWidgets import QApplication, QWidget
 
-from . import geometry, palette, sheet
+from . import geometry, launcher_prefs, palette, sheet
 from .platform import win_glass
 
 # Three faces, three jobs. Every candidate list ends in something Windows always has, because a
@@ -131,6 +131,31 @@ def system_prefers_light() -> bool | None:
 def resolve_theme(mode: str) -> palette.Palette:
     """The palette for an appearance mode, with the system preference probed here."""
     return palette.resolve(mode, prefers_light=system_prefers_light())
+
+
+def system_language() -> str:
+    """The OS UI language, resolved to "he" or "en" -- "en" for anything else.
+
+    Used only as the last-resort default, when neither the launcher's shared settings nor an
+    app's own override apply.
+    """
+    return "he" if QLocale.system().name().startswith("he") else "en"
+
+
+def resolve_shared_theme() -> palette.Palette:
+    """The palette every program should show: the launcher's setting, or the system default.
+
+    This is the strict-mirror entry point consumers call at startup instead of reading their own
+    persisted ``theme`` setting -- see ``launcher_prefs`` for the file this reads and the fallback
+    rule.
+    """
+    mode = launcher_prefs.resolve_mode(prefers_light=system_prefers_light())
+    return palette.resolve(mode, prefers_light=system_prefers_light())
+
+
+def resolve_shared_language() -> str:
+    """The language every program should show: the launcher's setting, or the system default."""
+    return launcher_prefs.resolve_language(system_language=system_language())
 
 
 def apply(app: QApplication, faces: Faces, *, glass: bool, extra: str = "",

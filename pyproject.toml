@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "forecast-theme"
-version = "0.5.0"
+version = "1.0.0"
 description = "The shared design system: palette, stylesheet, fonts and Windows glass."
 readme = "README.md"
 requires-python = ">=3.10"

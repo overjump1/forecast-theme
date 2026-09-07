@@ -2,7 +2,8 @@
 
 One app in the family is an Electron/WebGL viewer rather than a Qt app. It cannot use the
 stylesheet, but it must use the same colours, and a hand-kept copy is the one option that is
-definitively wrong: 50-odd tokens times two modes is 100 values, and the whole reason ``Palette``
+definitively wrong: a dozen-odd tokens times two modes is enough values that hand-copying them
+would drift, and the whole reason ``Palette``
 is a frozen dataclass with no defaults is that a missing token is a ``TypeError`` at import rather
 than a colour that silently comes out empty. A CSS ``var()`` that resolves to nothing does not
 error -- it inherits, or falls back to black.
