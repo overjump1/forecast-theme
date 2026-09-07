@@ -26,7 +26,8 @@ from __future__ import annotations
 import json
 from dataclasses import fields
 
-from .geometry import RADIUS_CTRL, RADIUS_PANEL, RADIUS_PILL, RADIUS_PILL_LG, S1, S2, S3, S4, S5, S6, S7
+from .geometry import (COMPACT, RADIUS_CTRL, RADIUS_PANEL, RADIUS_PILL, RADIUS_PILL_LG,
+                       RADIUS_SM, S1, S2, S3, S4, S5, S6, S7)
 from .palette import DARK, LIGHT, Ink, Palette
 
 PREFIX = "--ft"
@@ -83,6 +84,11 @@ def css_vars() -> str:
     return "\n".join(parts) + "\n"
 
 
+def _px(points: int) -> int:
+    """A Qt point size as CSS pixels at 96dpi, which is what Electron renders at."""
+    return round(points * 96 / 72)
+
+
 def _geometry_block() -> str:
     lines = [
         "/* Geometry. Note the pill radii are NOT the Qt values: that Qt build does not clamp a",
@@ -94,6 +100,17 @@ def _geometry_block() -> str:
         f"  {PREFIX}-radius-ctrl: {RADIUS_CTRL}px;",
         f"  {PREFIX}-radius-pill: 999px;",
         f"  {PREFIX}-radius-pill-lg: 999px;",
+        f"  {PREFIX}-radius-sm: {RADIUS_SM}px;",
+        "",
+        "  /* Control metrics, so a button here is the shape of a button in the Qt apps. Qt sizes",
+        "   * in pt; these are the same numbers at 96dpi, which is what Electron renders at. */",
+        f"  {PREFIX}-pad-btn: {COMPACT.btn_pad[0]}px {COMPACT.btn_pad[1]}px;",
+        f"  {PREFIX}-pad-pill: {COMPACT.pill_pad[0]}px {COMPACT.pill_pad[1]}px;",
+        f"  {PREFIX}-pad-chip: {COMPACT.chip_pad[0]}px {COMPACT.chip_pad[1]}px;",
+        f"  {PREFIX}-font-body: {_px(COMPACT.font_pt)}px;",
+        f"  {PREFIX}-font-small: {_px(COMPACT.small_pt)}px;",
+        f"  {PREFIX}-font-section: {_px(COMPACT.section_pt)}px;",
+        f"  {PREFIX}-font-title: {_px(COMPACT.title_pt)}px;",
     ]
     for index, value in enumerate((S1, S2, S3, S4, S5, S6, S7), start=1):
         lines.append(f"  {PREFIX}-s{index}: {value}px;")
@@ -133,14 +150,84 @@ def js_module() -> str:
     )
 
 
-def write(out_dir) -> list[str]:
-    """Write both artifacts into ``out_dir``. Returns the paths written."""
+FACE_FILES = (
+    ("sans", "Heebo", "Heebo.ttf", 400),
+    ("display", "Rubik", "Rubik.ttf", 500),
+    ("mono", "JetBrains Mono", "JetBrainsMono.ttf", 400),
+)
+"""The three faces the Qt apps resolve, as (role, family, filename, weight)."""
+
+
+def font_css(rel: str = "fonts") -> str:
+    """``@font-face`` blocks and the family variables, for a CSS consumer.
+
+    Without this a web consumer runs on whatever the system offers -- paper-clip was on Segoe UI
+    while the other three were on Heebo -- which is the most visible way a shared palette can
+    still look like a different product.
+
+    Args:
+        rel: Path to the font directory, relative to the stylesheet that will hold these rules.
+    """
+    lines = ["/* Typography. The same faces the Qt apps load, so all four read as one product. */"]
+    for _role, family, filename, weight in FACE_FILES:
+        lines += [
+            "@font-face {",
+            f'  font-family: "{family}";',
+            f'  src: url("{rel}/{filename}") format("truetype");',
+            f"  font-weight: {weight};",
+            "  font-style: normal;",
+            "  font-display: swap;",
+            "}",
+        ]
+    lines.append(":root {")
+    for role, family, _filename, _weight in FACE_FILES:
+        # No "system-ui" here: a consumer's test asserts the stylesheet never says "system",
+        # because the renderer is handed an already-resolved mode and must not learn that the
+        # system appearance option exists.
+        fallback = '"Segoe UI", Arial, sans-serif' if role != "mono" else "ui-monospace, monospace"
+        lines.append(f'  {PREFIX}-font-{role}: "{family}", {fallback};')
+    lines.append("}")
+    return chr(10).join(lines)
+
+
+def copy_fonts(out_dir) -> list[str]:
+    """Copy the bundled TTFs into ``out_dir``. Returns the paths written."""
+    import shutil
+    from pathlib import Path
+
+    from .styling import font_dir
+
+    target = Path(out_dir)
+    target.mkdir(parents=True, exist_ok=True)
+    written = []
+    source = font_dir()
+    for _role, _family, filename, _weight in FACE_FILES:
+        shutil.copy2(source / filename, target / filename)
+        written.append(str(target / filename))
+    for licence in sorted(source.glob("OFL-*.txt")):
+        shutil.copy2(licence, target / licence.name)
+        written.append(str(target / licence.name))
+    return written
+
+
+def write(out_dir, *, fonts: str | None = None) -> list[str]:
+    """Write both artifacts into ``out_dir``. Returns the paths written.
+
+    Args:
+        out_dir: Where the stylesheet and the JS module go.
+        fonts: Subdirectory of ``out_dir`` to copy the TTFs into, also used as the
+            relative URL in the ``@font-face`` rules. None writes no fonts.
+    """
     from pathlib import Path
 
     directory = Path(out_dir)
     directory.mkdir(parents=True, exist_ok=True)
     written = []
-    for name, text in (("theme.generated.css", css_vars()),
+    css = css_vars()
+    if fonts is not None:
+        css = css + chr(10) + font_css(fonts) + chr(10)
+        written += copy_fonts(directory / fonts)
+    for name, text in (("theme.generated.css", css),
                        ("theme.generated.js", js_module())):
         path = directory / name
         path.write_text(text, encoding="utf-8", newline="\n")
@@ -151,5 +238,11 @@ def write(out_dir) -> list[str]:
 if __name__ == "__main__":
     import sys
 
-    for written in write(sys.argv[1] if len(sys.argv) > 1 else "."):
+    args = sys.argv[1:]
+    fonts = None
+    if "--fonts" in args:
+        index = args.index("--fonts")
+        fonts = args[index + 1] if len(args) > index + 1 else "fonts"
+        del args[index:index + 2]
+    for written in write(args[0] if args else ".", fonts=fonts):
         print(f"wrote {written}")
