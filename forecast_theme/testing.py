@@ -121,6 +121,9 @@ TINTED_PAIRS = (
     ("ok_fill", ("text", "ok")),
     ("warn_fill", ("text", "warn")),
     ("danger_fill", ("text", "danger")),
+    ("ok_fill_hi", ("text", "ok")),
+    ("warn_fill_hi", ("text", "warn")),
+    ("danger_fill_hi", ("text", "danger")),
 )
 
 

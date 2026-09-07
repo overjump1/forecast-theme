@@ -24,9 +24,13 @@ from __future__ import annotations
 
 from . import export, testing
 from .geometry import (
+    COMFORTABLE,
+    COMPACT,
+    Metrics,
     RADIUS_CTRL,
     RADIUS_PANEL,
     RADIUS_PILL,
+    RADIUS_SM,
     RADIUS_PILL_LG,
     S1,
     S2,
@@ -63,7 +67,8 @@ __all__ = [
     "MODE_LIGHT", "MODE_DARK", "MODE_SYSTEM", "MODES",
     "active", "use", "resolve", "token_names", "qc",
     # geometry
-    "RADIUS_PANEL", "RADIUS_CTRL", "RADIUS_PILL_LG", "RADIUS_PILL",
+    "RADIUS_PANEL", "RADIUS_CTRL", "RADIUS_PILL_LG", "RADIUS_PILL", "RADIUS_SM",
+    "Metrics", "COMPACT", "COMFORTABLE",
     "S1", "S2", "S3", "S4", "S5", "S6", "S7",
     # sheet
     "base_qss", "tone_rules", "CONTRACT_NAMES",

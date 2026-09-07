@@ -24,7 +24,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont, QFontDatabase, QGuiApplication
 from PyQt6.QtWidgets import QApplication, QWidget
 
-from . import palette, sheet
+from . import geometry, palette, sheet
 from .platform import win_glass
 
 # Three faces, three jobs. Every candidate list ends in something Windows always has, because a
@@ -133,7 +133,8 @@ def resolve_theme(mode: str) -> palette.Palette:
     return palette.resolve(mode, prefers_light=system_prefers_light())
 
 
-def apply(app: QApplication, faces: Faces, *, glass: bool, extra: str = "") -> None:
+def apply(app: QApplication, faces: Faces, *, glass: bool, extra: str = "",
+          metrics: geometry.Metrics = geometry.COMPACT) -> None:
     """Set the application font and the stylesheet for the active palette.
 
     Args:
@@ -144,9 +145,12 @@ def apply(app: QApplication, faces: Faces, *, glass: bool, extra: str = "") -> N
             turned off takes -- and the path an app with its own opaque chrome should always take.
         extra: The app's own rules, appended after the base sheet. QSS is last-wins at equal
             specificity, so this can override a base rule as well as add to it.
+        metrics: Control sizing -- ``COMPACT`` for a desktop tool, ``COMFORTABLE`` for a
+            full-screen operator window. Also sets the application font size, so the base
+            font and the stylesheet cannot drift apart.
     """
     pal = palette.active()
-    app.setFont(QFont(faces.sans, 10))
+    app.setFont(QFont(faces.sans, metrics.font_pt))
 
     # Tell Qt which scheme we are in, so the things Qt draws for us -- the native file picker, a
     # QMessageBox's standard icons -- match the app instead of the desktop. Guarded because it
@@ -155,7 +159,8 @@ def apply(app: QApplication, faces: Faces, *, glass: bool, extra: str = "") -> N
     if hasattr(hints, "setColorScheme"):
         hints.setColorScheme(Qt.ColorScheme.Dark if pal.dark else Qt.ColorScheme.Light)
 
-    base = sheet.base_qss(pal, faces.sans, faces.display, faces.mono, glass=glass)
+    base = sheet.base_qss(pal, faces.sans, faces.display, faces.mono, glass=glass,
+                          metrics=metrics)
     app.setStyleSheet(f"{base}\n{extra}" if extra else base)
 
 

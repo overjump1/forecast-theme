@@ -168,6 +168,9 @@ class Palette:
     ok_fill: Ink
     warn_fill: Ink
     danger_fill: Ink
+    ok_fill_hi: Ink
+    warn_fill_hi: Ink
+    danger_fill_hi: Ink
 
     # ------------------------------------------------------------------ text
     text: str
@@ -307,6 +310,9 @@ LIGHT = Palette(
     ok_fill=Ink(22, 101, 52, 0.10),
     warn_fill=Ink(133, 77, 14, 0.10),
     danger_fill=Ink(190, 18, 60, 0.10),
+    ok_fill_hi=Ink(22, 101, 52, 0.20),
+    warn_fill_hi=Ink(133, 77, 14, 0.20),
+    danger_fill_hi=Ink(190, 18, 60, 0.17),
 
     text="#0F1B2D",
     text_dim="#47576D",
@@ -375,6 +381,9 @@ DARK = Palette(
     ok_fill=Ink(74, 222, 128, 0.13),
     warn_fill=Ink(250, 204, 21, 0.13),
     danger_fill=Ink(251, 113, 133, 0.11),
+    ok_fill_hi=Ink(74, 222, 128, 0.24),
+    warn_fill_hi=Ink(250, 204, 21, 0.24),
+    danger_fill_hi=Ink(251, 113, 133, 0.20),
 
     text="#E8EFF9",
     text_dim="#9FB0C7",
